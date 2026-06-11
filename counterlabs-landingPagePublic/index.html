@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CounterLabs — The Operating System for Physical Retail</title>
+  <meta name="description" content="Computer vision that gives physical stores the intelligence of an online one. Real-time inventory, customer behaviour, and predictive analytics — no manual counts." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --black:        #000000;
+      --purple:       #a855f7;
+      --purple-dark:  #7c3aed;
+      --purple-dim:   rgba(168,85,247,0.14);
+      --white:        #ffffff;
+      --lavender:     #ede9fe;
+      --lavender-mid: #ddd6fe;
+      --paper:        #f8f8f8;
+      --ink:          #0a0a0a;
+      --muted:        #525252;
+      --site-font:    ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--black);
+      color: var(--white);
+      font-family: var(--site-font);
+      line-height: 1.5;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; text-decoration: none; }
+    button, input, select { font: inherit; }
+    .wrap { width: min(1160px, calc(100% - 48px)); margin: 0 auto; }
+
+    /* ─── NAV ─── */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(0,0,0,0.78);
+      backdrop-filter: blur(18px) saturate(180%);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+    }
+    .nav-inner {
+      width: min(1160px, calc(100% - 48px));
+      margin: 0 auto;
+      min-height: 70px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+    }
+    .brand {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 1.1rem; font-weight: 800; letter-spacing: -0.04em;
+    }
+    .brand img { width: 28px; height: 28px; object-fit: contain; }
+    .nav-right {
+      display: flex; align-items: center; gap: 28px;
+      font-size: 0.88rem; color: rgba(255,255,255,0.55);
+    }
+    .nav-right a:hover { color: var(--white); }
+    .nav-cta {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 38px; padding: 0 20px;
+      background: var(--purple); color: var(--white);
+      font-weight: 700; font-size: 0.88rem;
+      border: none; cursor: pointer; border-radius: 8px;
+      transition: background 140ms, transform 140ms;
+    }
+    .nav-cta:hover { background: var(--purple-dark); transform: translateY(-1px); }
+
+    /* ─── HERO ─── */
+    .hero-shell {
+      position: relative; overflow: hidden;
+      background: var(--black);
+      min-height: 100vh;
+    }
+    /* dot grid */
+    .hero-shell::before {
+      content: "";
+      position: absolute; inset: 0; pointer-events: none;
+      background-image: radial-gradient(rgba(168,85,247,0.25) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: radial-gradient(ellipse 85% 75% at 58% 36%, black 15%, transparent 72%);
+    }
+    /* radial glow */
+    .hero-shell::after {
+      content: "";
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 1100px 680px at 58% 34%, rgba(168,85,247,0.17) 0%, transparent 68%);
+    }
+    .nav-spacer { height: 70px; }
+    .hero {
+      position: relative; z-index: 1;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(380px, 0.82fr);
+      gap: 60px; align-items: center;
+      padding: 64px 0 72px;
+      min-height: calc(100vh - 70px);
+    }
+
+    /* kicker */
+    .kicker {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.2em;
+      text-transform: uppercase; color: var(--purple);
+      margin-bottom: 26px;
+    }
+    .kicker::before { content: ""; width: 22px; height: 1.5px; background: var(--purple); }
+
+    h1 {
+      font-size: clamp(3rem, 6.2vw, 6rem);
+      line-height: 0.91; letter-spacing: -0.075em; font-weight: 900;
+    }
+    h1 em { color: var(--purple); font-style: normal; }
+
+    .hero-copy {
+      max-width: 540px; margin-top: 24px;
+      color: rgba(255,255,255,0.58);
+      font-size: clamp(1rem, 1.7vw, 1.15rem); line-height: 1.68;
+    }
+    .hero-actions {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      margin-top: 38px;
+    }
+    .btn-primary {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 52px; padding: 0 28px;
+      background: var(--purple); color: var(--white);
+      font-weight: 700; font-size: 0.97rem;
+      border: none; cursor: pointer; border-radius: 8px;
+      transition: background 140ms, transform 140ms, box-shadow 140ms;
+    }
+    .btn-primary:hover {
+      background: var(--purple-dark); transform: translateY(-2px);
+      box-shadow: 0 12px 36px rgba(168,85,247,0.3);
+    }
+    .btn-ghost {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-height: 52px; padding: 0 28px;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: rgba(255,255,255,0.75);
+      font-weight: 600; font-size: 0.97rem; cursor: pointer; border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      backdrop-filter: blur(10px);
+      transition: border-color 140ms, color 140ms, background 140ms;
+    }
+    .btn-ghost:hover {
+      border-color: rgba(255,255,255,0.42); color: var(--white);
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* stat strip */
+    .hero-stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      column-gap: 24px;
+      margin-top: 56px;
+    }
+    .hero-stat {
+      min-width: 0;
+      padding: 0;
+    }
+    .stat-num {
+      display: block;
+      font-size: clamp(1.7rem, 2.1vw, 2.35rem);
+      font-weight: 900; letter-spacing: 0; line-height: 1;
+      color: var(--purple);
+      white-space: nowrap;
+    }
+    .stat-label {
+      display: block; margin-top: 6px;
+      font-size: 0.8rem; color: rgba(255,255,255,0.44);
+      max-width: none; line-height: 1.45;
+    }
+
+    /* ─── CONSOLE ─── */
+    .console {
+      width: 100%; min-height: 560px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(6,6,6,0.85);
+      backdrop-filter: blur(22px);
+      box-shadow:
+        0 0 0 1px rgba(168,85,247,0.1),
+        0 40px 120px rgba(0,0,0,0.6),
+        0 0 80px rgba(168,85,247,0.06);
+      padding: 18px;
+    }
+    .console-top {
+      display: flex; justify-content: space-between; gap: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase;
+    }
+    .console-top .c-title { color: rgba(255,255,255,0.82); font-weight: 700; }
+    .console-top .c-badge {
+      color: var(--purple); font-weight: 700;
+    }
+    .console-grid {
+      display: grid; grid-template-columns: 1fr 0.63fr;
+      gap: 14px; height: 480px; padding-top: 14px;
+    }
+    /* vision pane */
+    .vision-pane {
+      position: relative; overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: #06080f;
+    }
+    .shelf-svg { display: block; width: 100%; height: 100%; }
+    @keyframes bbox-blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.18; }
+    }
+    .bb1 { animation: bbox-blink 2.6s ease-in-out infinite; }
+    .bb2 { animation: bbox-blink 2.6s ease-in-out infinite; animation-delay: 0.9s; }
+    .bb3 { animation: bbox-blink 2.6s ease-in-out infinite; animation-delay: 1.6s; }
+    /* metrics */
+    .metrics { display: grid; gap: 12px; }
+    .metric {
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      padding: 14px 16px;
+      display: flex; flex-direction: column; gap: 4px;
+      justify-content: space-between; min-height: 96px;
+    }
+    .metric span {
+      color: rgba(255,255,255,0.4);
+      font-size: 0.68rem; letter-spacing: 0.13em; text-transform: uppercase;
+    }
+    .metric strong {
+      font-size: 1.7rem; letter-spacing: -0.07em; line-height: 1;
+    }
+    .metric small { color: var(--purple); font-weight: 800; font-size: 0.78rem; }
+
+    /* ─── PROBLEM BAR ─── */
+    .problem-bar {
+      background: var(--ink);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 20px 0;
+    }
+    .problem-bar-inner {
+      display: flex; align-items: center; gap: 0;
+      width: min(1160px, calc(100% - 48px));
+      margin: 0 auto;
+    }
+    .pbar-label {
+      flex-shrink: 0; padding-right: 40px; border-right: 1px solid rgba(255,255,255,0.1);
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.16em;
+      text-transform: uppercase; color: rgba(255,255,255,0.35);
+      white-space: nowrap;
+    }
+    .pbar-items {
+      display: flex; flex: 1; flex-wrap: wrap;
+    }
+    .pbar-item {
+      flex: 1; min-width: 180px;
+      display: flex; align-items: center; gap: 14px;
+      padding: 4px 28px;
+      border-right: 1px solid rgba(255,255,255,0.07);
+    }
+    .pbar-item:last-child { border-right: none; }
+    .pbar-num {
+      font-size: 1.4rem; font-weight: 900; letter-spacing: -0.06em; color: var(--purple);
+      white-space: nowrap;
+    }
+    .pbar-desc {
+      font-size: 0.78rem; color: rgba(255,255,255,0.45); line-height: 1.4;
+    }
+
+    /* ─── WORKFLOW ─── */
+    .section-workflow {
+      background: var(--lavender); color: var(--ink);
+      padding: 72px 0;
+    }
+    .section-label {
+      display: block;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.18em;
+      text-transform: uppercase; color: var(--purple);
+      margin-bottom: 16px;
+    }
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, 0.75fr) minmax(240px, 0.5fr);
+      gap: 48px; align-items: end;
+      margin-bottom: 48px;
+    }
+    h2 {
+      font-size: clamp(2rem, 4vw, 3.8rem);
+      line-height: 0.94; letter-spacing: -0.07em; font-weight: 900;
+    }
+    .section-head p { color: var(--muted); font-size: 0.97rem; line-height: 1.65; }
+    .workflow {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 1px; background: rgba(0,0,0,0.12);
+      border: 1px solid rgba(0,0,0,0.12);
+    }
+    .step {
+      min-height: 220px; padding: 22px 20px;
+      background: rgba(255,255,255,0.65);
+      display: flex; flex-direction: column; justify-content: space-between;
+      transition: background 200ms;
+    }
+    .step:hover { background: rgba(255,255,255,0.88); }
+    .step-number {
+      width: 36px; height: 36px;
+      display: grid; place-items: center;
+      background: var(--black); color: var(--purple);
+      font-weight: 900; font-size: 0.8rem; letter-spacing: 0.04em;
+    }
+    .step h3 {
+      margin-bottom: 10px;
+      font-size: 1.1rem; letter-spacing: -0.03em; font-weight: 800;
+    }
+    .step p { color: var(--muted); font-size: 0.93rem; line-height: 1.6; }
+
+    /* ─── PILOTS + FORM ─── */
+    .section-pilots {
+      background: var(--black); color: var(--white);
+      padding: 100px 0;
+      position: relative; overflow: hidden;
+    }
+    .section-pilots::before {
+      content: "";
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 900px 500px at 30% 50%, rgba(168,85,247,0.1) 0%, transparent 65%);
+    }
+    .section-pilots::after {
+      content: "";
+      position: absolute; inset: 0; pointer-events: none;
+      background-image: radial-gradient(rgba(168,85,247,0.16) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: radial-gradient(ellipse 60% 80% at 20% 50%, black 0%, transparent 70%);
+    }
+    .pilots-inner {
+      position: relative; z-index: 1;
+      display: grid; grid-template-columns: 1.1fr 0.9fr;
+      gap: 72px; align-items: start;
+    }
+    .pilots-left { }
+    .pilots-left .section-label { color: var(--purple); }
+    .pilots-left h2 { color: var(--white); }
+    .case-list { display: grid; gap: 1px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.08); margin-top: 36px; }
+    .case {
+      display: grid; grid-template-columns: 140px 1fr;
+      gap: 20px; align-items: start;
+      padding: 20px 22px;
+      background: rgba(255,255,255,0.03);
+      transition: background 160ms;
+    }
+    .case:hover { background: rgba(168,85,247,0.07); }
+    .case strong {
+      font-size: 0.72rem; font-weight: 800;
+      letter-spacing: 0.11em; text-transform: uppercase;
+      color: var(--purple);
+    }
+    .case p { color: rgba(255,255,255,0.55); font-size: 0.92rem; line-height: 1.55; }
+
+    /* competition line */
+    .competition-line {
+      margin-top: 40px;
+      padding: 20px 22px;
+      border-left: 2px solid var(--purple);
+      background: rgba(168,85,247,0.06);
+    }
+    .competition-line p {
+      font-size: 0.95rem; color: rgba(255,255,255,0.65); line-height: 1.6;
+      font-style: italic;
+    }
+    .competition-line p em { color: var(--white); font-style: normal; font-weight: 700; }
+
+    /* form card */
+    .form-card {
+      position: sticky; top: 88px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.12);
+      box-shadow: 0 0 0 1px rgba(168,85,247,0.08), 0 32px 80px rgba(0,0,0,0.4);
+      padding: 36px 32px;
+    }
+    .form-card h3 {
+      font-size: 1.45rem; letter-spacing: -0.05em; font-weight: 900;
+      margin-bottom: 8px;
+    }
+    .form-card > p {
+      color: rgba(255,255,255,0.5); font-size: 0.9rem;
+      margin-bottom: 28px; line-height: 1.55;
+    }
+    form { display: grid; gap: 15px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    label, .form-field, .group-label {
+      display: grid; gap: 7px;
+      font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.13em; text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+    }
+    input, select, .select-trigger {
+      min-height: 46px; width: 100%;
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 8px;
+      background-color: rgba(255,255,255,0.055);
+      color: var(--white); padding: 0 14px; outline: none;
+      font-family: var(--site-font);
+      font-size: 0.95rem; font-weight: 500;
+      letter-spacing: 0; line-height: 1.2;
+      text-transform: none;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+      transition: border-color 140ms, background-color 140ms, box-shadow 140ms;
+    }
+    .custom-select { position: relative; }
+    .select-trigger {
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      text-align: left;
+      padding-right: 42px;
+      cursor: pointer;
+      position: relative;
+    }
+    .select-trigger::after {
+      content: "";
+      position: absolute; right: 16px; top: 50%;
+      width: 8px; height: 8px;
+      border-right: 1.5px solid rgba(255,255,255,0.65);
+      border-bottom: 1.5px solid rgba(255,255,255,0.65);
+      transform: translateY(-65%) rotate(45deg);
+      transition: transform 140ms, border-color 140ms;
+    }
+    .custom-select.open .select-trigger::after {
+      transform: translateY(-35%) rotate(225deg);
+      border-color: var(--white);
+    }
+    .select-menu {
+      position: absolute; left: 0; right: 0; top: calc(100% + 8px);
+      z-index: 20;
+      display: none;
+      padding: 6px;
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 8px;
+      background: rgba(12,12,14,0.98);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.42), 0 0 0 1px rgba(168,85,247,0.08);
+      backdrop-filter: blur(18px);
+    }
+    .custom-select.open .select-menu { display: grid; gap: 2px; }
+    .select-option {
+      min-height: 38px;
+      width: 100%;
+      border: 0;
+      border-radius: 6px;
+      background: transparent;
+      color: rgba(255,255,255,0.68);
+      cursor: pointer;
+      font-family: var(--site-font);
+      font-size: 0.92rem;
+      font-weight: 600;
+      letter-spacing: 0;
+      line-height: 1.2;
+      text-align: left;
+      text-transform: none;
+      padding: 0 10px;
+      transition: background 120ms, color 120ms;
+    }
+    .select-option:hover, .select-option:focus {
+      background: rgba(168,85,247,0.16);
+      color: var(--white);
+      outline: none;
+    }
+    .select-option.selected {
+      background: rgba(168,85,247,0.24);
+      color: var(--white);
+    }
+    input::placeholder { color: rgba(255,255,255,0.28); }
+    input:hover, select:hover, .select-trigger:hover {
+      border-color: rgba(255,255,255,0.22);
+      background-color: rgba(255,255,255,0.075);
+    }
+    input:focus, select:focus, .select-trigger:focus {
+      border-color: var(--purple);
+      background-color: rgba(255,255,255,0.08);
+      box-shadow: 0 0 0 3px rgba(168,85,247,0.16), 0 12px 28px rgba(0,0,0,0.18);
+    }
+    .custom-select.invalid .select-trigger {
+      border-color: rgba(239,68,68,0.8);
+      box-shadow: 0 0 0 3px rgba(239,68,68,0.14);
+    }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 5px; }
+    .chip {
+      display: inline-flex; align-items: center;
+      min-height: 34px; padding: 0 12px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 8px;
+      background: rgba(255,255,255,0.04);
+      color: rgba(255,255,255,0.6);
+      font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      transition: all 120ms ease;
+    }
+    .chip input { display: none; }
+    .chip:hover { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.07); }
+    .chip:has(input:checked) {
+      background: rgba(168,85,247,0.2);
+      color: var(--white); border-color: var(--purple);
+    }
+    .form-submit {
+      min-height: 52px; width: 100%;
+      background: var(--purple); color: var(--white);
+      border: none; border-radius: 8px; font-weight: 800; font-size: 0.97rem;
+      cursor: pointer; letter-spacing: -0.01em;
+      transition: background 140ms, box-shadow 140ms;
+    }
+    .form-submit:hover {
+      background: var(--purple-dark);
+      box-shadow: 0 8px 28px rgba(168,85,247,0.28);
+    }
+    .form-submit:disabled { opacity: 0.55; cursor: not-allowed; box-shadow: none; }
+    .note { color: rgba(255,255,255,0.3); font-size: 0.78rem; }
+    .message {
+      display: none; padding: 12px 14px;
+      font-size: 0.86rem; border: 1px solid;
+    }
+    .message.ok  { color: #a7f3d0; background: rgba(167,243,208,0.06); border-color: rgba(167,243,208,0.28); }
+    .message.err { color: #fca5a5; background: rgba(252,165,165,0.06); border-color: rgba(252,165,165,0.28); }
+
+    /* ─── CONTACT ─── */
+    .section-contact {
+      background: var(--black);
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding: 96px 0;
+      text-align: center;
+    }
+    .contact-inner { max-width: 560px; margin: 0 auto; }
+    .contact-inner .section-label { color: var(--purple); margin-bottom: 18px; display: block; }
+    .contact-inner h2 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 700; letter-spacing: -0.03em; color: var(--white); margin-bottom: 16px; }
+    .contact-inner p { color: rgba(255,255,255,0.55); font-size: 1.05rem; margin-bottom: 36px; }
+    .contact-email {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: rgba(168,85,247,0.1);
+      border: 1px solid rgba(168,85,247,0.35);
+      border-radius: 10px;
+      padding: 14px 28px;
+      font-size: 1.1rem;
+      color: var(--purple);
+      text-decoration: none;
+      transition: background 0.2s, border-color 0.2s, transform 0.2s;
+    }
+    .contact-email:hover { background: rgba(168,85,247,0.18); border-color: rgba(168,85,247,0.6); transform: translateY(-2px); }
+    .contact-email svg { flex-shrink: 0; }
+
+    /* ─── FOOTER ─── */
+    .footer {
+      background: var(--black);
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding: 28px 0;
+    }
+    .footer-inner {
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 14px;
+      font-size: 0.84rem; color: rgba(255,255,255,0.32);
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 1020px) {
+      .hero, .pilots-inner { grid-template-columns: 1fr; }
+      .console { min-height: auto; }
+      .console-grid { height: 460px; }
+      .workflow { grid-template-columns: 1fr; }
+      .section-head { grid-template-columns: 1fr; }
+      .form-card { position: static; }
+      .hero-stats { column-gap: 18px; }
+    }
+    @media (max-width: 680px) {
+      .wrap { width: calc(100% - 32px); }
+      .nav-right a:not(.nav-cta) { display: none; }
+      .hero { padding: 48px 0 64px; }
+      .console-grid { grid-template-columns: 1fr; height: auto; }
+      .vision-pane { min-height: 280px; }
+      .metrics { grid-template-columns: 1fr 1fr; }
+      .row, .case { grid-template-columns: 1fr; }
+      .hero-stats {
+        grid-template-columns: repeat(4, minmax(108px, 1fr));
+        column-gap: 16px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+      }
+      .hero-stat { border: none; padding: 0; }
+      .stat-label { font-size: 0.72rem; }
+      .pbar-items { flex-direction: column; }
+      .pbar-item { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.07); padding: 12px 0; }
+      .section-workflow { padding: 48px 0; }
+      .section-head { margin-bottom: 28px; }
+      .step { min-height: 0; padding: 16px 14px; }
+      .step h3 { font-size: 1rem; margin-bottom: 6px; }
+      .step p { font-size: 0.88rem; }
+    }
+  </style>
+  <link
+    rel = "stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/css/intlTelInput.css"
+    />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.8/js/intlTelInput.min.js" defer></script>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav class="nav" aria-label="Primary">
+    <div class="nav-inner">
+      <a class="brand" href="#">
+        <img src="Images/counterlabs_eye_white_transparent.png" alt="" />
+        CounterLabs
+      </a>
+      <div class="nav-right">
+        <a href="#workflow">How it works</a>
+        <a href="#pilots">Pilots</a>
+        <a class="nav-cta" href="#pilots">Request access</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero-shell">
+    <div class="nav-spacer"></div>
+    <section class="wrap hero">
+      <div>
+        <h1>The vision layer your store has been <em>missing.</em></h1>
+        <p class="hero-copy">CounterLabs turns camera feeds into live operational signals — shelf gaps, queue pressure, movement heatmaps, and shrinkage indicators that managers can act on immediately.</p>
+        <div class="hero-actions">
+          <a class="btn-primary" href="#pilots">Request pilot access</a>
+          <a class="btn-ghost" href="#workflow">See how it works</a>
+        </div>
+        <div class="hero-stats">
+          <div class="hero-stat">
+            <span class="stat-num">4.1%</span>
+            <span class="stat-label">of revenue lost to stockouts at the average retailer</span>
+          </div>
+          <div class="hero-stat">
+            <span class="stat-num">€90bn+</span>
+            <span class="stat-label">in unsold food written off across Europe every year</span>
+          </div>
+          <div class="hero-stat">
+            <span class="stat-num">73%</span>
+            <span class="stat-label">of all retail is physical — yet stores run on gut instinct</span>
+          </div>
+          <div class="hero-stat">
+            <span class="stat-num">Zero</span>
+            <span class="stat-label">visibility into real customer behaviour — until now</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="console" aria-label="CounterLabs live console preview">
+        <div class="console-top">
+          <span class="c-title">Vision console</span>
+          <span class="c-badge">● Live</span>
+        </div>
+        <div class="console-grid">
+          <div class="vision-pane">
+            <svg class="shelf-svg" viewBox="0 0 320 466" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+              <defs>
+                <!-- horizontal beam gradient -->
+                <linearGradient id="beamH" x1="0" y1="0" x2="1" y2="0">
+                  <stop offset="0%"   stop-color="#a855f7" stop-opacity="0"/>
+                  <stop offset="20%"  stop-color="#a855f7" stop-opacity="1"/>
+                  <stop offset="80%"  stop-color="#a855f7" stop-opacity="1"/>
+                  <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
+                </linearGradient>
+                <!-- soft vertical glow for beam -->
+                <linearGradient id="beamV" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%"   stop-color="#a855f7" stop-opacity="0"/>
+                  <stop offset="50%"  stop-color="#a855f7" stop-opacity="0.35"/>
+                  <stop offset="100%" stop-color="#a855f7" stop-opacity="0"/>
+                </linearGradient>
+                <!-- vignette -->
+                <radialGradient id="vig" cx="50%" cy="50%" r="70%">
+                  <stop offset="55%" stop-color="#06080f" stop-opacity="0"/>
+                  <stop offset="100%" stop-color="#06080f" stop-opacity="0.75"/>
+                </radialGradient>
+              </defs>
+
+              <!-- Background -->
+              <rect width="320" height="466" fill="#06080f"/>
+
+              <!-- Subtle dot grid -->
+              <g opacity="0.055">
+                <pattern id="dots" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+                  <circle cx="16" cy="16" r="1" fill="#a855f7"/>
+                </pattern>
+                <rect width="320" height="466" fill="url(#dots)"/>
+              </g>
+
+              <!-- ══════════════════════════════ SHELF 1 ══ board at y=158 ══ -->
+              <!-- Products (bottom-aligned to y=157) -->
+              <!-- bottle -->  <rect x="8"   y="83"  width="11" height="74" fill="#2e0d52" rx="1"/>
+              <rect x="8"   y="83"  width="11" height="5"  fill="#6d28d9" rx="1"/>
+              <!-- bottle -->  <rect x="21"  y="86"  width="11" height="71" fill="#3b1065" rx="1"/>
+              <rect x="21"  y="86"  width="11" height="5"  fill="#7c3aed" rx="1"/>
+              <!-- box -->     <rect x="34"  y="93"  width="24" height="64" fill="#0f0d1e" rx="1"/>
+              <rect x="34"  y="93"  width="24" height="4"  fill="#1e1a38" rx="1"/>
+              <rect x="37"  y="105" width="18" height="7"  fill="#a855f7"  opacity="0.2" rx="1"/>
+              <!-- box -->     <rect x="60"  y="95"  width="24" height="62" fill="#130e24" rx="1"/>
+              <rect x="60"  y="95"  width="24" height="4"  fill="#231a40" rx="1"/>
+              <!-- ↑ GAP / stockout x=86 to x=112 — left deliberately empty ↑ -->
+              <!-- box -->     <rect x="113" y="91"  width="22" height="66" fill="#1e1040" rx="1"/>
+              <rect x="113" y="91"  width="22" height="4"  fill="#3b1a70" rx="1"/>
+              <!-- bottle -->  <rect x="137" y="84"  width="11" height="73" fill="#2e0d52" rx="1"/>
+              <rect x="137" y="84"  width="11" height="5"  fill="#7c3aed" rx="1"/>
+              <!-- bottle -->  <rect x="150" y="87"  width="11" height="70" fill="#3b1065" rx="1"/>
+              <!-- box -->     <rect x="163" y="92"  width="24" height="65" fill="#0d0d1c" rx="1"/>
+              <rect x="163" y="92"  width="24" height="4"  fill="#1a1830" rx="1"/>
+              <rect x="166" y="104" width="18" height="7"  fill="#c084fc"  opacity="0.18" rx="1"/>
+              <!-- bottle -->  <rect x="189" y="85"  width="11" height="72" fill="#4c1d95" rx="1"/>
+              <!-- box -->     <rect x="202" y="94"  width="22" height="63" fill="#12102a" rx="1"/>
+              <rect x="202" y="94"  width="22" height="4"  fill="#261e4a" rx="1"/>
+              <!-- bottle -->  <rect x="226" y="83"  width="11" height="74" fill="#2e0d52" rx="1"/>
+              <rect x="226" y="83"  width="11" height="5"  fill="#6d28d9" rx="1"/>
+              <!-- box -->     <rect x="239" y="93"  width="24" height="64" fill="#0f0d1e" rx="1"/>
+              <rect x="239" y="93"  width="24" height="4"  fill="#1e1a38" rx="1"/>
+              <!-- bottle -->  <rect x="265" y="87"  width="11" height="70" fill="#3b1065" rx="1"/>
+              <!-- bottle -->  <rect x="278" y="84"  width="11" height="73" fill="#4c1d95" rx="1"/>
+              <rect x="278" y="84"  width="11" height="5"  fill="#7c3aed" rx="1"/>
+              <!-- box -->     <rect x="291" y="91"  width="24" height="66" fill="#130e24" rx="1"/>
+              <rect x="291" y="91"  width="24" height="4"  fill="#231a40" rx="1"/>
+
+              <!-- Shelf 1 board -->
+              <rect x="0"  y="158" width="320" height="5"  fill="#1e1e1e" rx="0"/>
+              <rect x="0"  y="163" width="320" height="2"  fill="#0a0a0a"/>
+              <!-- Price rail 1 -->
+              <rect x="0"  y="153" width="320" height="5"  fill="#d0d0d0" opacity="0.45" rx="0"/>
+
+              <!-- ══════════════════════════════ SHELF 2 ══ board at y=278 ══ -->
+              <!-- bigger cereal-box style products -->
+              <!-- box -->     <rect x="8"   y="186" width="30" height="90" fill="#12102a" rx="1"/>
+              <rect x="8"   y="186" width="30" height="5"  fill="#231e4a" rx="1"/>
+              <rect x="11"  y="202" width="24" height="10" fill="#a855f7"  opacity="0.18" rx="1"/>
+              <!-- box -->     <rect x="40"  y="190" width="30" height="86" fill="#0a0818" rx="1"/>
+              <rect x="40"  y="190" width="30" height="5"  fill="#160e30" rx="1"/>
+              <!-- bottle tall --> <rect x="72"  y="180" width="13" height="96" fill="#2e0d52" rx="1"/>
+              <rect x="72"  y="180" width="13" height="6"  fill="#7c3aed" rx="1"/>
+              <!-- box -->     <rect x="87"  y="188" width="30" height="88" fill="#1a1238" rx="1"/>
+              <rect x="87"  y="188" width="30" height="5"  fill="#2d1a5a" rx="1"/>
+              <!-- DWELL box (highlighted) -->
+              <rect x="119" y="184" width="32" height="92" fill="#2a1450" rx="1"/>
+              <rect x="119" y="184" width="32" height="5"  fill="#4c1d96" rx="1"/>
+              <rect x="122" y="200" width="26" height="11" fill="#a855f7"  opacity="0.3" rx="1"/>
+              <!-- box -->     <rect x="153" y="189" width="30" height="87" fill="#0d0d20" rx="1"/>
+              <rect x="153" y="189" width="30" height="5"  fill="#1a1836" rx="1"/>
+              <!-- bottle tall --> <rect x="185" y="181" width="13" height="95" fill="#3b1065" rx="1"/>
+              <rect x="185" y="181" width="13" height="6"  fill="#6d28d9" rx="1"/>
+              <!-- box -->     <rect x="200" y="187" width="30" height="89" fill="#12102a" rx="1"/>
+              <rect x="200" y="187" width="30" height="5"  fill="#231e4a" rx="1"/>
+              <!-- box -->     <rect x="232" y="190" width="30" height="86" fill="#0a0818" rx="1"/>
+              <rect x="232" y="190" width="30" height="5"  fill="#160e30" rx="1"/>
+              <rect x="235" y="205" width="24" height="10" fill="#c084fc"  opacity="0.16" rx="1"/>
+              <!-- box -->     <rect x="264" y="185" width="32" height="91" fill="#1a1238" rx="1"/>
+              <rect x="264" y="185" width="32" height="5"  fill="#2d1a5a" rx="1"/>
+              <!-- bottle tall --> <rect x="298" y="179" width="13" height="97" fill="#2e0d52" rx="1"/>
+              <rect x="298" y="179" width="13" height="6"  fill="#7c3aed" rx="1"/>
+
+              <!-- Shelf 2 board -->
+              <rect x="0"  y="277" width="320" height="5"  fill="#1e1e1e"/>
+              <rect x="0"  y="282" width="320" height="2"  fill="#0a0a0a"/>
+              <!-- Price rail 2 -->
+              <rect x="0"  y="272" width="320" height="5"  fill="#d0d0d0" opacity="0.45"/>
+
+              <!-- ══════════════════════════════ SHELF 3 ══ board at y=390 ══ -->
+              <!-- cans + short boxes -->
+              <!-- can -->  <rect x="8"   y="352" width="17" height="36" fill="#3b1065" rx="2"/>
+              <rect x="8"   y="352" width="17" height="4"  fill="#7c3aed" rx="2"/>
+              <!-- can -->  <rect x="27"  y="354" width="17" height="34" fill="#2e0d52" rx="2"/>
+              <rect x="27"  y="354" width="17" height="4"  fill="#6d28d9" rx="2"/>
+              <!-- can -->  <rect x="46"  y="352" width="17" height="36" fill="#4c1d95" rx="2"/>
+              <!-- short box --> <rect x="65"  y="344" width="22" height="44" fill="#0d0d20" rx="1"/>
+              <rect x="65"  y="344" width="22" height="4"  fill="#1a1836" rx="1"/>
+              <!-- can -->  <rect x="89"  y="353" width="17" height="35" fill="#3b1065" rx="2"/>
+              <!-- RESTOCK gap x=108–130 -->
+              <!-- can -->  <rect x="131" y="352" width="17" height="36" fill="#2e0d52" rx="2"/>
+              <rect x="131" y="352" width="17" height="4"  fill="#7c3aed" rx="2"/>
+              <!-- can -->  <rect x="150" y="354" width="17" height="34" fill="#4c1d95" rx="2"/>
+              <!-- short box --> <rect x="169" y="345" width="22" height="43" fill="#12102a" rx="1"/>
+              <rect x="169" y="345" width="22" height="4"  fill="#231e4a" rx="1"/>
+              <!-- can -->  <rect x="193" y="352" width="17" height="36" fill="#3b1065" rx="2"/>
+              <rect x="193" y="352" width="17" height="4"  fill="#6d28d9" rx="2"/>
+              <!-- can -->  <rect x="212" y="354" width="17" height="34" fill="#2e0d52" rx="2"/>
+              <!-- short box --> <rect x="231" y="343" width="22" height="45" fill="#0a0818" rx="1"/>
+              <rect x="231" y="343" width="22" height="4"  fill="#160e30" rx="1"/>
+              <!-- can -->  <rect x="255" y="352" width="17" height="36" fill="#4c1d95" rx="2"/>
+              <!-- can -->  <rect x="274" y="353" width="17" height="35" fill="#3b1065" rx="2"/>
+              <rect x="274" y="353" width="17" height="4"  fill="#7c3aed" rx="2"/>
+              <!-- box -->  <rect x="293" y="342" width="24" height="46" fill="#1a1238" rx="1"/>
+              <rect x="293" y="342" width="24" height="4"  fill="#2d1a5a" rx="1"/>
+
+              <!-- Shelf 3 board -->
+              <rect x="0"  y="389" width="320" height="5"  fill="#1e1e1e"/>
+              <rect x="0"  y="394" width="320" height="2"  fill="#0a0a0a"/>
+              <!-- Price rail 3 -->
+              <rect x="0"  y="384" width="320" height="5"  fill="#d0d0d0" opacity="0.45"/>
+
+              <!-- Floor -->
+              <rect x="0" y="396" width="320" height="70" fill="#04040a"/>
+
+              <!-- ══════════════════════════════ BOUNDING BOXES ══ -->
+              <!-- SKU gap — shelf 1 -->
+              <g class="bb1">
+                <rect x="85"  y="80"  width="27" height="78" fill="#a855f7" opacity="0.05"/>
+                <rect x="85"  y="80"  width="27" height="78" fill="none" stroke="#a855f7" stroke-width="1.2"/>
+                <rect x="85"  y="68"  width="46" height="13" fill="#a855f7"/>
+                <text x="89" y="78" fill="#fff" font-size="7.5" font-weight="700" font-family="ui-monospace,monospace">SKU gap</text>
+              </g>
+
+              <!-- Dwell — shelf 2 -->
+              <g class="bb2">
+                <rect x="118" y="180" width="34" height="97" fill="#a855f7" opacity="0.06"/>
+                <rect x="118" y="180" width="34" height="97" fill="none" stroke="#a855f7" stroke-width="1.2"/>
+                <rect x="118" y="168" width="58" height="13" fill="#a855f7"/>
+                <text x="122" y="178" fill="#fff" font-size="7.5" font-weight="700" font-family="ui-monospace,monospace">Dwell +21%</text>
+              </g>
+
+              <!-- Restock — shelf 3 -->
+              <g class="bb3">
+                <rect x="107" y="340" width="24" height="54" fill="#a855f7" opacity="0.06"/>
+                <rect x="107" y="340" width="24" height="54" fill="none" stroke="#a855f7" stroke-width="1.2"/>
+                <rect x="107" y="328" width="46" height="13" fill="#a855f7"/>
+                <text x="111" y="338" fill="#fff" font-size="7.5" font-weight="700" font-family="ui-monospace,monospace">Restock</text>
+              </g>
+
+              <!-- ══════════════════════════════ SCANNING BEAM ══ -->
+              <!-- glow (wider, softer) -->
+              <rect x="0" y="0" width="320" height="14" fill="url(#beamV)">
+                <animate attributeName="y" from="-7" to="473" dur="4.8s" repeatCount="indefinite"/>
+              </rect>
+              <!-- hard line -->
+              <rect x="0" y="0" width="320" height="1.5" fill="url(#beamH)" opacity="0.9">
+                <animate attributeName="y" from="0" to="466" dur="4.8s" repeatCount="indefinite"/>
+              </rect>
+
+              <!-- Vignette overlay -->
+              <rect width="320" height="466" fill="url(#vig)" pointer-events="none"/>
+
+              <!-- ══════════════════════════════ CAMERA HUD ══ -->
+              <rect x="0" y="0" width="320" height="22" fill="rgba(0,0,0,0.6)"/>
+              <text x="10" y="14" fill="rgba(255,255,255,0.55)" font-size="8" font-family="ui-monospace,monospace" letter-spacing="0.4">CAM 04 · AISLE 3 · GROCERY</text>
+              <!-- REC indicator -->
+              <circle cx="290" cy="11" r="3.5" fill="#ef4444">
+                <animate attributeName="opacity" values="1;0.15;1" dur="1.8s" repeatCount="indefinite"/>
+              </circle>
+              <text x="297" y="15" fill="rgba(255,255,255,0.55)" font-size="8" font-family="ui-monospace,monospace">REC</text>
+              <!-- Bottom status bar -->
+              <rect x="0" y="452" width="320" height="14" fill="rgba(0,0,0,0.6)"/>
+              <text x="10" y="462" fill="rgba(255,255,255,0.38)" font-size="7.5" font-family="ui-monospace,monospace">09:42:15 · EDGE AI · PRIVACY-SAFE</text>
+              <text x="248" y="462" fill="#a855f7" font-size="7.5" font-family="ui-monospace,monospace" font-weight="700">● ACTIVE</text>
+            </svg>
+          </div>
+          <div class="metrics">
+            <div class="metric"><span>Stock confidence</span><strong>94%</strong><small>+11% this week</small></div>
+            <div class="metric"><span>Queue pressure</span><strong>2m 40s</strong><small>Open lane soon</small></div>
+            <div class="metric"><span>Action feed</span><strong>18</strong><small>4 urgent</small></div>
+            <div class="metric"><span>Camera health</span><strong>12/12</strong><small>Online</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </header>
+
+  <!-- PROBLEM BAR -->
+  <div class="problem-bar" aria-hidden="true">
+    <div class="problem-bar-inner">
+      <span class="pbar-label">The problem</span>
+      <div class="pbar-items">
+        <div class="pbar-item">
+          <span class="pbar-num">250k+</span>
+          <span class="pbar-desc">supermarkets globally running blind</span>
+        </div>
+        <div class="pbar-item">
+          <span class="pbar-num">No clicks</span>
+          <span class="pbar-desc">physical stores can't see who browsed and didn't buy</span>
+        </div>
+        <div class="pbar-item">
+          <span class="pbar-num">Yesterday</span>
+          <span class="pbar-desc">the most recent data most stores ever act on</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- WORKFLOW -->
+    <section class="section-workflow" id="workflow">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <span class="section-label">How it works</span>
+            <h2>From passive footage to daily decisions.</h2>
+          </div>
+          <p>Built for retailers who want the intelligence of ecommerce analytics inside the store — without the responsibility of designing the infrastructure or hiring a data team.</p>
+        </div>
+        <div class="workflow">
+          <article class="step">
+            <div class="step-number">01</div>
+            <div>
+              <h3>Connect cameras</h3>
+              <p>We supply and install the CCTV. CounterLabs maps the store and calibrates key zones in a single visit.</p>
+            </div>
+          </article>
+          <article class="step">
+            <div class="step-number">02</div>
+            <div>
+              <h3>Detect store events</h3>
+              <p>Computer vision models translate footage into shelf, queue, movement, and risk events in real time.</p>
+            </div>
+          </article>
+          <article class="step">
+            <div class="step-number">03</div>
+            <div>
+              <h3>Act in the moment</h3>
+              <p>Managers get a simple live action feed and dashboard — not another wall of data to interpret after closing time.</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- PILOTS + FORM -->
+    <section class="section-pilots" id="pilots">
+      <div class="wrap pilots-inner">
+        <div class="pilots-left">
+          <span class="section-label">Pilot programme</span>
+          <h2>What founding stores can test first.</h2>
+          <div class="case-list">
+            <article class="case">
+              <strong>Shelf availability</strong>
+              <p>Spot product gaps and misplaced stock before customers leave empty-handed.</p>
+            </article>
+            <article class="case">
+              <strong>Queue response</strong>
+              <p>Live queue length and wait-time estimates to trigger faster staff decisions.</p>
+            </article>
+            <article class="case">
+              <strong>Layout analytics</strong>
+              <p>See where shoppers pause, pass through, or avoid — then improve merchandising with evidence.</p>
+            </article>
+            <article class="case">
+              <strong>Risk awareness</strong>
+              <p>Identify zones and time windows where shrinkage risk is rising. No facial recognition.</p>
+            </article>
+          </div>
+          <div class="competition-line">
+            <p><em>Everyone is chasing the thief.</em> We're serving the shopper — leading with inventory, waste, and customer behaviour rather than security.</p>
+          </div>
+        </div>
+
+        <aside class="form-card">
+          <h3>Join the pre-launch waitlist</h3>
+          <p>Tell us about your store. We'll review fit and contact selected pilot partners directly.</p>
+          <form id="pilot-form" action="/api/waitlist" method="POST">
+            <div class="row">
+              <label>Full name
+                <input type="text" name="full_name" placeholder="Jane Smith" required autocomplete="name" minlength="2" maxlength="200" title="Please enter your full name (at least 2 characters)"/>
+              </label>
+              <label>Email
+                <input type="email" name="email" placeholder="jane@yourstore.com" required autocomplete="email" />
+              </label>
+              <label for="phone_number">Phone number
+                <input type="tel" id="phone_number" name="phone_number" placeholder="077491197642" />
+              </label>
+            </div>
+            <div class="row">
+              <label>Shop location
+                <input type="text" name="shop_location" placeholder="Town or postcode" required autocomplete="off" />
+              </label>
+              <div class="form-field">Shop type
+                <div class="custom-select" data-required-select>
+                  <input type="hidden" name="shop_type" />
+                  <button type="button" class="select-trigger" aria-haspopup="listbox" aria-expanded="false">Select type</button>
+                  <div class="select-menu" role="listbox">
+                    <button type="button" class="select-option" role="option" data-value="convenience">Convenience store</button>
+                    <button type="button" class="select-option" role="option" data-value="supermarket">Supermarket / Grocery</button>
+                    <button type="button" class="select-option" role="option" data-value="pharmacy">Pharmacy / Health</button>
+                    <button type="button" class="select-option" role="option" data-value="fashion">Fashion / Clothing</button>
+                    <button type="button" class="select-option" role="option" data-value="electronics">Electronics / Tech</button>
+                    <button type="button" class="select-option" role="option" data-value="cafe">Cafe / Food and Drink</button>
+                    <button type="button" class="select-option" role="option" data-value="petrol">Petrol station / Forecourt</button>
+                    <button type="button" class="select-option" role="option" data-value="other">Other</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="form-field">Camera count
+              <div class="custom-select" data-required-select>
+                <input type="hidden" name="camera_count" />
+                <button type="button" class="select-trigger" aria-haspopup="listbox" aria-expanded="false">Select a range</button>
+                <div class="select-menu" role="listbox">
+                  <button type="button" class="select-option" role="option" data-value="0">None yet</button>
+                  <button type="button" class="select-option" role="option" data-value="1-5">1-5</button>
+                  <button type="button" class="select-option" role="option" data-value="6-15">6-15</button>
+                  <button type="button" class="select-option" role="option" data-value="16-30">16-30</button>
+                  <button type="button" class="select-option" role="option" data-value="30+">30+</button>
+                </div>
+              </div>
+            </div>
+            <div class="group-label">Biggest challenge
+              <div class="chips">
+                <label class="chip"><input type="checkbox" name="challenges" value="stock_accuracy" />Stock</label>
+                <label class="chip"><input type="checkbox" name="challenges" value="theft_shrinkage" />Theft</label>
+                <label class="chip"><input type="checkbox" name="challenges" value="footfall_counting" />Footfall</label>
+                <label class="chip"><input type="checkbox" name="challenges" value="queue_management" />Queues</label>
+                <label class="chip"><input type="checkbox" name="challenges" value="customer_behaviour" />Behaviour</label>
+              </div>
+            </div>
+            <button class="form-submit" id="pilot-submit" type="submit">Request early access →</button>
+            <p class="note">No spam. We'll only contact you about CounterLabs pilots.</p>
+            <div class="message ok"  id="pilot-success">Request received — we'll be in touch soon.</div>
+            <div class="message err" id="pilot-error">Something went wrong. Please try again.</div>
+          </form>
+        </aside>
+      </div>
+    </section>
+
+    <section class="section-contact" id="contact">
+      <div class="wrap">
+        <div class="contact-inner">
+          <span class="section-label">Get in touch</span>
+          <h2>We'd love to hear from you</h2>
+          <p>Questions, partnership enquiries, or just curious about what CounterLabs can do for your store — drop us a line.</p>
+          <a class="contact-email" href="mailto:hello@counterlabs.ai">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="4" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M2 7l8 5 8-5" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            </svg>
+            hello@counterlabs.ai
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="wrap footer-inner">
+      <span>CounterLabs</span>
+      <span>Pre-launch 2026. Built for physical retail operators.</span>
+    </div>
+  </footer>
+
+  <script src="js/form.js" defer></script>
+</body>
+</html>
